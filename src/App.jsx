@@ -1,8 +1,29 @@
 import './App.css';
 import booksData from "./data/books.json";
-import React from "react";
+import React, { useState } from "react";
 
 function App() {
+  const [books, setBooks] = useState(booksData);
+  const [selectedBook, setSelectedBook] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+
+  const handleRemove = (isbn13) => {
+    setBooks(books.filter((book) => book.isbn13 !== isbn13));
+  };
+
+  const handleSelect = (isbn13) => {
+    setSelectedBook(selectedBook === isbn13 ? null : isbn13);
+  };
+
+  const handleOpenModal = () => setShowModal(true);
+  const handleCloseModal = () => setShowModal(false);
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+
+    handleCloseModal();
+  };
+
   return (
     <div className="app">
       <header className="header">
@@ -11,17 +32,19 @@ function App() {
 
       <main>
         <div className="content">
-          {booksData.map((book) => (
+          {books.map((book) => (
             <Book
               key={book.isbn13}
-              title={book.title}
               price={book.price}
               image={book.image}
               url={book.url}
+              selected={selectedBook === book.isbn13}
+              onSelect={() => handleSelect(book.isbn13)}
+              onRemove={() => handleRemove(book.isbn13)}
             />
           ))}
 
-          <button className="add-button">
+          <button className="add-button" onClick={handleOpenModal}>
             +
             <div>Add</div>
           </button>
@@ -31,21 +54,53 @@ function App() {
       <footer className="footer">
         © {new Date().getFullYear()} Kayla Luo
       </footer>
+
+      {/* Modal */}
+      {showModal && (
+        <div className="modal-backdrop">
+          <div className="modal">
+            <h2>Add a New Book</h2>
+            <form onSubmit={handleFormSubmit}>
+              <label>Title <input type="text" required /></label>
+              <label>Author <input type="text" required /></label>
+              <label>Publisher <input type="text" /></label>
+              <label>Publication Year <input type="number" /></label>
+              <label>Language <input type="text" /></label>
+              <label>Pages <input type="number" /></label>
+              <div className="modal-actions">
+                <button type="button" class="cancel-button"onClick={handleCloseModal}>Cancel</button>
+                <button type="submit" class="submit-button">Submit</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 // Reusable Book component
-function Book({ title, price, image, url }) {
+function Book({ title, price, image, url, selected, onSelect, onRemove }) {
   return (
-    <div className="book-card">
+    <div
+      className={`book-card ${selected ? "selected" : ""}`}
+      onClick={onSelect}
+    >
       <img src={image} alt={title} />
-      <p className="book-price">{price}</p> {/* 👈 show price instead of author */}
+      <h3>{title}</h3>
+      <p className="book-price">{price}</p>
       <a href={url} target="_blank" rel="noopener noreferrer">
         Details
       </a>
+      <button className="remove-button" onClick={(e) => { 
+        e.stopPropagation(); 
+        onRemove();
+      }}>
+        Remove
+      </button>
     </div>
   );
 }
 
 export default App;
+
